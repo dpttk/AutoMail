@@ -9,3 +9,10 @@
 * has ansible installed
 * community.general module is installed. If doesn't: 
 `ansible-galaxy collection install community.general`
+
+
+
+## Troubleshooting
+
+If you facing problems with permissions, be sure that user you chose has sudo permissions.
+If it doesn't help, try to allow this user to use sudo without password.
