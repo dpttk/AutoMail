@@ -8,16 +8,24 @@
       update_cache: yes
       cache_valid_time: 86400 #One day
 
-  - name: Ensure apache is installed.
+  - name: Install apache.
     become: yes
-    become_method: sudo
     apt: 
       name: apache2
       state: latest
 
-  - name: Ensure apache is passing ufw.
+  - name: Allow apache in ufw.
     become: yes
-    become_method: sudo
     community.general.ufw: 
       rule: allow
       name: Apache
+
+  - name: Install php
+    become: yes
+    apt: 
+      name: 
+        - php 
+        - libapache2-mod-php
+        - php-mysql
+      state: latest
+
