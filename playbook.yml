@@ -20,4 +20,4 @@
     become_method: sudo
     community.general.ufw: 
       rule: allow
-      name: apache2
+      name: Apache
