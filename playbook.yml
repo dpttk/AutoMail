@@ -42,7 +42,7 @@
     command: sudo certbot certonly --standalone --email {{email}} --domain {{ domain }} --agree-tos --non-interactive
     args:
       creates: /etc/letsencrypt/live/{{ domain }}
-    ignore_errors: true
+    ignore_errors: true # for testing on vm without public ip
 
     
   - name: Setup cronjob for renewal
@@ -64,8 +64,17 @@
         - roundcube-sqlite3
       state: latest
 
-      # add virtual mailboxes
-      # copy template
-      # configure dovecot
-      # configure roundcube
+  - name: Change main.cf to template
+    become: yes
+    ansible.builtin.template: 
+      src: ./templates/main.cf.j2
+      dest: /etc/postfix/main.cf
+
+
+
+# TODOs
+# add virtual mailboxes
+# copy template
+# configure dovecot
+# configure roundcube
 

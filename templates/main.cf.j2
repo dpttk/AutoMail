@@ -1,14 +1,14 @@
 smtp_tls_security_level = may
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
-smtpd_tls_cert_file = /etc/letsencrypt/live/{}/fullchain.pem
-smtpd_tls_key_file = /etc/letsencrypt/live/{}/privkey.pem
+smtpd_tls_cert_file = /etc/letsencrypt/live/{{domain}}/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/{{domain}}/privkey.pem
 
 smtpd_sasl_type = dovecot
 smtpd_sasl_path = private/auth
 
 virtual_transport = lmtp:unix:private/dovecot-lmtp
-virtual_mailbox_domains = {} 
+virtual_mailbox_domains = {{domain}} 
 virtual_alias_maps = hash:/etc/postfix/virtual_aliases
 
 inet_protocols = all
