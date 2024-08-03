@@ -16,3 +16,7 @@
 
 If you facing problems with permissions, be sure that user you chose has sudo permissions.
 If it doesn't help, try to allow this user to use sudo without password.
+
+## Contribution
+
+There is no spam filter yet

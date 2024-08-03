@@ -52,9 +52,20 @@
       minute: "0"
       hour: "14"
 
-  - name: Install postfix
+  - name: Install postfix, dovecot, roundcube
     become: yes
     apt: 
-      name: postfix
+      name: 
+        - postfix
+        - dovecot-core
+        - dovecot-imapd
+        - dovecot-pop3d
+        - dovecot-lmtpd
+        - roundcube-sqlite3
       state: latest
+
+      # add virtual mailboxes
+      # copy template
+      # configure dovecot
+      # configure roundcube
 
