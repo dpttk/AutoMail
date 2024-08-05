@@ -4,6 +4,7 @@
   vars:
     email: test@example.com
     domain: example.com
+    collector_name: user
 
   tasks:
   - name: Update and upgrade apt packages
@@ -64,12 +65,22 @@
         - roundcube-sqlite3
       state: latest
 
-  - name: Change main.cf to template
+
+  - name: Add collector to postfix
+    become: yes
+    ansible.builtin.lineinfile:
+      path: /etc/postfix/virtual_aliases
+      state: present
+      create: true
+      line: '@{{domain}}       {{collector_name}}@{{domain}}'
+
+  - name: Configure postfix
     become: yes
     ansible.builtin.template: 
       src: ./templates/main.cf.j2
       dest: /etc/postfix/main.cf
 
+ 
 
 
 # TODOs
