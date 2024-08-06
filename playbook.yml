@@ -5,6 +5,7 @@
     email: test@example.com
     domain: example.com
     collector_name: user
+    password: password
 
   tasks:
   - name: Update and upgrade apt packages
@@ -36,8 +37,6 @@
     community.general.snap: 
       name: certbot
       classic: true
-
-
 
   - name: Get certificate
     command: sudo certbot certonly --standalone --email {{email}} --domain {{ domain }} --agree-tos --non-interactive
@@ -74,18 +73,72 @@
       create: true
       line: '@{{domain}}       {{collector_name}}@{{domain}}'
 
-  - name: Configure postfix
+  - name: Setup postfix/main.cf
     become: yes
     ansible.builtin.template: 
       src: ./templates/main.cf.j2
       dest: /etc/postfix/main.cf
 
- 
+  - name: Adjust postfix/master.cf
+    become: yes
+    ansible.builtin.replace:
+      path: /etc/postfix/master.cf
+      regexp: "#submission inet n       -       y       -       -       smtpd" 
+      replace: "submission inet n       -       y       -       -       smtpd"
 
+  - name: dovecot/conf.d/10-mail.conf
+    become: yes
+    ansible.builtin.replace:
+      path: /etc/dovecot/conf.d/10-mail.conf
+      regexp: "mail_location = mbox:~/mail:INBOX=/var/mail/%u"
+      replace: " mail_location = maildir:/var/mail/vhosts/%d/%n"
 
-# TODOs
-# add virtual mailboxes
-# copy template
-# configure dovecot
-# configure roundcube
+  - name: vhost directory
+    become: yes
+    ansible.builtin.file:
+      path: /var/mail/vhosts/{{domain}}
+      state: directory
 
+  - name: Create vmail group
+    become: yes
+    ansible.builtin.group:
+      name: vmail
+      gid: 5000 
+      state: present
+  
+  - name: Create vmail user
+    become: yes
+    ansible.builtin.user:
+      name: vmail
+      group: vmail
+      uid: 5000
+      home: /var/mail/vhosts/
+      system: true
+      state: present
+
+  - name: Assigning ownership of vhost directory
+    become: yes
+    ansible.builtin.file:
+      path: /var/mail/vhosts/
+      group: vmail
+
+  - name: Configure dovecot
+    become: yes
+    ansible.builtin.template:
+      src: "{{item.src}}"
+      dest: "{{item.dest}}"
+    loop:
+      - src: ./templates/10-master.conf.j2
+        dest: /etc/dovecot/conf.d/10-master.conf
+      - src: ./templates/10-auth.conf.j2
+        dest: /etc/dovecot/conf.d/10-auth.conf
+      - src: ./templates/auth-passwdfile.conf.ext.j2
+        dest: /etc/dovecot/conf.d/auth-passwdfile.conf.ext
+      - src: ./templates/dovecot-users.j2
+        dest: /etc/dovecot/dovecot-users
+
+  # - name: Still Configure SSL
+  #   become: yes
+  #   ansible.builtin.replace:
+  #     path: /etc/dovecot/conf.d/10-ssl.conf
+      

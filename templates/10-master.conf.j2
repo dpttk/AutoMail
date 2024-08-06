@@ -1,0 +1,61 @@
+service imap-login {
+  inet_listener imap {
+  }
+  inet_listener imaps {
+    port = 993
+    ssl = yes
+  }
+}
+
+service pop3-login {
+  inet_listener pop3 {
+  }
+  inet_listener pop3s {
+    port = 993
+    ssl = yes
+  }
+}
+
+service submission-login {
+  inet_listener submission {
+  }
+  inet_listener submissions {
+  }
+}
+
+service lmtp {
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
+
+}
+
+service imap {
+}
+
+service pop3 {
+}
+unix_listener /var/spool/postfix/private/auth{
+  mode= 0666
+  user = postfix
+  group = postfix
+}
+
+
+service submission {
+}
+
+service auth {
+  unix_listener auth-userdb {
+  }
+}
+
+service auth-worker {
+}
+
+service dict {
+  unix_listener dict {
+  }
+}
