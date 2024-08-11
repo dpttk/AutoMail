@@ -2,10 +2,12 @@
 - hosts: all
 
   vars:
-    email: test@example.com
-    domain: example.com
-    collector_name: user
-    password: password
+    email: 
+    domain: 
+    collector_name: 
+    password: 
+    mariadb_password: 
+    roundcube_db_password: 
 
   tasks:
   - name: Update and upgrade apt packages
@@ -39,10 +41,9 @@
       classic: true
 
   - name: Get certificate
-    command: sudo certbot certonly --standalone --email {{email}} --domain {{ domain }} --agree-tos --non-interactive
+    command: sudo certbot certonly --apache --email {{email}} --domain {{ domain }} --agree-tos --non-interactive
     args:
       creates: /etc/letsencrypt/live/{{ domain }}
-    ignore_errors: true # for testing on vm without public ip
 
     
   - name: Setup cronjob for renewal
@@ -61,7 +62,9 @@
         - dovecot-imapd
         - dovecot-pop3d
         - dovecot-lmtpd
-        - roundcube-sqlite3
+        - mariadb-server
+        - python3-pymysql
+        - python3-mysqldb
       state: latest
 
 
@@ -137,8 +140,123 @@
       - src: ./templates/dovecot-users.j2
         dest: /etc/dovecot/dovecot-users
 
-  # - name: Still Configure SSL
-  #   become: yes
-  #   ansible.builtin.replace:
-  #     path: /etc/dovecot/conf.d/10-ssl.conf
-      
+  - name: Still Configure SSL
+    become: yes
+    ansible.builtin.replace:
+      path: /etc/dovecot/conf.d/10-ssl.conf
+      regexp: "{{item.regexp}}"
+      replace: "{{item.line}}"
+    loop:
+      - regexp: "ssl = yes"
+        line: "ssl = required"
+      - regexp: "ssl_cert = </etc/dovecot/private/dovecot.pem"
+        line: "ssl_cert = </etc/letsencrypt/live/{{domain}}/fullchain.pem"
+      - regexp: "ssl_key = </etc/dovecot/private/dovecot.key"
+        line: "ssl_key = </etc/letsencrypt/live/{{domain}}/privkey.pem"
+
+
+  - name: Add Apache conf 
+    become: yes
+    ansible.builtin.template:
+      src: ./templates/roundcube.conf.j2
+      dest: /etc/apache2/sites-enabled/roundcube
+
+  - name: Restart Services
+    become: yes
+    ansible.builtin.service:
+      name: "{{item}}"
+      state: restarted
+    loop:
+      - postfix
+      - dovecot
+      - apache2
+
+
+  - name: Set root user to password
+    mysql_user:
+      check_implicit_admin: true
+      login_host: 'localhost'
+      login_user: 'root'
+      login_password: ''
+      name: 'root'
+      password: '{{mariadb_password}}'
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+      column_case_sensitive: true
+    become: yes
+    ignore_errors: true
+
+  - name: Remove anonymous users
+    become: yes
+    community.mysql.mysql_user:
+      name: ''
+      host: localhost
+      state: absent
+      login_user: 'root'
+      login_password: '{{mariadb_password}}'
+      column_case_sensitive: true
+
+  - name: Remove test database
+    become: yes
+    community.mysql.mysql_db:
+      name: test
+      state: absent
+      login_user: 'root'
+      login_password: '{{mariadb_password}}'
+
+
+  - name: Create Roundcube database
+    become: yes
+    community.mysql.mysql_db:
+      login_user: 'root'
+      login_password: '{{mariadb_password}}'
+      name: roundcube
+      state: present
+
+  - name: Create Roundcube db user
+    become: yes
+    community.mysql.mysql_user:
+      login_user: 'root'
+      login_password: '{{mariadb_password}}'
+      name: roundcubeuser
+      password: '{{roundcube_db_password}}'
+      priv: 'roundcube.*:ALL'
+      host: localhost
+      state: present
+
+  - name: Download Roundcube
+    get_url:
+      url: https://github.com/roundcube/roundcubemail/releases/download/1.4.6/roundcubemail-1.4.6-complete.tar.gz
+      dest: /tmp/roundcubemail-1.4.6-complete.tar.gz
+
+  - name: Extract Roundcube
+    become: yes
+    unarchive:
+      src: /tmp/roundcubemail-1.4.6-complete.tar.gz
+      dest: /var/www/
+      remote_src: yes
+      extra_opts: [--transform, 's/roundcubemail-1.4.6/roundcube/']
+
+  - name: Set ownership of Roundcube directory
+    become: yes
+    file:
+      path: /var/www/html/roundcube
+      owner: www-data
+      group: www-data
+      state: directory
+      recurse: yes
+
+  - name: Initialize Roundcube database
+    mysql_db:
+      name: roundcube
+      state: import
+      target: /var/www/roundcube/SQL/mysql.initial.sql
+      login_user: roundcubeuser
+      login_password: '{{roundcube_db_password}}'
+    ignore_errors: true
+
+  - name: Remove Roundcube installer directory
+    become: yes
+    file:
+      path: /var/www/roundcube/installer
+      state: absent

@@ -1,0 +1,22 @@
+<VirtualHost *:80>
+
+        ServerName mail.{{domain}}
+#        SSLCertificateFile /etc/letsencrypt/live/{{domain}}/fullchain.pem
+#        SSLCertificateKeyFile /etc/letsencrypt/live/{{domain}}/privkey.pem
+#        Include /etc/letsencrypt/options-ssl-apache.conf
+
+
+        DocumentRoot /var/www/roundcube/
+
+        ErrorLog ${APACHE_LOG_DIR}/roundcube_error.log
+        CustomLog ${APACHE_LOG_DIR}/roundcube_access.log combined
+
+        Options FollowSymLinks
+        AllowOverride All
+        
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+</VirtualHost>
+</IfModule>
