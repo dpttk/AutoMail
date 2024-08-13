@@ -2,12 +2,12 @@
 - hosts: all
 
   vars:
-    email: 
-    domain: 
-    collector_name: 
-    password: 
-    mariadb_password: 
-    roundcube_db_password: 
+    email: admin@dpttk.ru
+    domain: cr.dpttk.ru
+    collector_name: admin
+    password: password
+    mariadb_password: P@ssw0rd
+    roundcube_db_password: P@ssw0rd
 
   tasks:
   - name: Update and upgrade apt packages
@@ -17,15 +17,35 @@
       update_cache: yes
       cache_valid_time: 86400 #One day
 
-  - name: Install apache and php.
+  - name: Installing packages.
     become: yes
     apt: 
       name: 
         - apache2
-        - php 
         - libapache2-mod-php
+        - php 
+        - php-mbstring
         - php-mysql
+        - php-dom
+        - php-xml
+        - php-sqlite3
+        - php-intl
+        - php-ldap
+        - php-gd
+        - php-imagick
+        - php-zip
+        - php-json
+        - php-sockets
+        - php-common
+        - php-ctype
+        - php-curl
         - snapd
+        - postfix
+        - dovecot-core
+        - dovecot-imapd
+        - dovecot-pop3d
+        - dovecot-lmtpd
+        - sqlite3
       state: latest
 
   - name: Allow apache in ufw.
@@ -52,20 +72,6 @@
       job: "/bin/bash -lc 'certbot -q renew'"
       minute: "0"
       hour: "14"
-
-  - name: Install postfix, dovecot, roundcube
-    become: yes
-    apt: 
-      name: 
-        - postfix
-        - dovecot-core
-        - dovecot-imapd
-        - dovecot-pop3d
-        - dovecot-lmtpd
-        - mariadb-server
-        - python3-pymysql
-        - python3-mysqldb
-      state: latest
 
 
   - name: Add collector to postfix
@@ -94,7 +100,7 @@
     ansible.builtin.replace:
       path: /etc/dovecot/conf.d/10-mail.conf
       regexp: "mail_location = mbox:~/mail:INBOX=/var/mail/%u"
-      replace: " mail_location = maildir:/var/mail/vhosts/%d/%n"
+      replace: "mail_location = maildir:/var/mail/vhosts/%d/%n"
 
   - name: vhost directory
     become: yes
@@ -171,71 +177,18 @@
       - dovecot
       - apache2
 
-
-  - name: Set root user to password
-    mysql_user:
-      check_implicit_admin: true
-      login_host: 'localhost'
-      login_user: 'root'
-      login_password: ''
-      name: 'root'
-      password: '{{mariadb_password}}'
-      state: present
-      login_unix_socket: /run/mysqld/mysqld.sock
-      column_case_sensitive: true
-    become: yes
-    ignore_errors: true
-
-  - name: Remove anonymous users
-    become: yes
-    community.mysql.mysql_user:
-      name: ''
-      host: localhost
-      state: absent
-      login_user: 'root'
-      login_password: '{{mariadb_password}}'
-      column_case_sensitive: true
-
-  - name: Remove test database
-    become: yes
-    community.mysql.mysql_db:
-      name: test
-      state: absent
-      login_user: 'root'
-      login_password: '{{mariadb_password}}'
-
-
-  - name: Create Roundcube database
-    become: yes
-    community.mysql.mysql_db:
-      login_user: 'root'
-      login_password: '{{mariadb_password}}'
-      name: roundcube
-      state: present
-
-  - name: Create Roundcube db user
-    become: yes
-    community.mysql.mysql_user:
-      login_user: 'root'
-      login_password: '{{mariadb_password}}'
-      name: roundcubeuser
-      password: '{{roundcube_db_password}}'
-      priv: 'roundcube.*:ALL'
-      host: localhost
-      state: present
-
   - name: Download Roundcube
     get_url:
-      url: https://github.com/roundcube/roundcubemail/releases/download/1.4.6/roundcubemail-1.4.6-complete.tar.gz
-      dest: /tmp/roundcubemail-1.4.6-complete.tar.gz
+      url: https://github.com/roundcube/roundcubemail/releases/download/1.6.8/roundcubemail-1.6.8-complete.tar.gz
+      dest: /tmp/roundcubemail-1.6.8-complete.tar.gz
 
   - name: Extract Roundcube
     become: yes
     unarchive:
-      src: /tmp/roundcubemail-1.4.6-complete.tar.gz
-      dest: /var/www/
+      src: /tmp/roundcubemail-1.6.8-complete.tar.gz
+      dest: /var/www/html/
       remote_src: yes
-      extra_opts: [--transform, 's/roundcubemail-1.4.6/roundcube/']
+      extra_opts: [--transform, 's/roundcubemail-1.6.8/roundcube/']
 
   - name: Set ownership of Roundcube directory
     become: yes
@@ -246,17 +199,3 @@
       state: directory
       recurse: yes
 
-  - name: Initialize Roundcube database
-    mysql_db:
-      name: roundcube
-      state: import
-      target: /var/www/roundcube/SQL/mysql.initial.sql
-      login_user: roundcubeuser
-      login_password: '{{roundcube_db_password}}'
-    ignore_errors: true
-
-  - name: Remove Roundcube installer directory
-    become: yes
-    file:
-      path: /var/www/roundcube/installer
-      state: absent
