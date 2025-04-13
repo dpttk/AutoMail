@@ -49,22 +49,17 @@ I would suggest connecting your mail server to your current email service provid
 
 3. Configure variables for your environment:
    ```
-   vim group_vars/all.yml
+   vim group_vars/all.yaml
    ```
 
-4. Secure your passwords using Ansible Vault (recommended for production):
+4. Run the playbook:
    ```
-   ansible-vault encrypt group_vars/all.yml
-   ```
-
-5. Run the playbook:
-   ```
-   ansible-playbook -i inventory/hosts.ini site.yml
+   ansible-playbook -i inventory/hosts.ini site.yaml
    ```
 
 ## Configuration
 
-The main configuration variables are stored in `group_vars/all.yml`:
+The main configuration variables are stored in `group_vars/all.yaml`:
 
 * `domain`: Your domain name
 * `email`: Email for Let's Encrypt certificate
