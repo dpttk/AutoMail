@@ -1,0 +1,53 @@
+<?php
+
+// Database connection settings
+$config['db_dsnw'] = 'sqlite:////var/www/html/roundcube/sqlite.db';
+
+// Mail server settings
+$config['default_host'] = 'localhost';
+$config['default_port'] = 143;
+$config['imap_auth_type'] = 'LOGIN';
+$config['smtp_server'] = 'localhost';
+$config['smtp_port'] = 25;
+$config['smtp_user'] = '%u';
+$config['smtp_pass'] = '%p';
+
+// SMTP AUTH is required
+$config['smtp_auth_type'] = 'LOGIN';
+
+// Use user identity to send mail
+$config['mail_domain'] = '{{ domain }}';
+$config['username_domain'] = '{{ domain }}';
+
+// Interface options
+$config['skin'] = 'elastic';
+$config['language'] = 'en_US';
+$config['timezone'] = 'auto';
+
+// Security settings
+$config['des_key'] = '{{ lookup('password', '/dev/null chars=hexdigits length=24') }}';
+$config['session_lifetime'] = 30;
+$config['login_autocomplete'] = 2;
+$config['login_rate_limit'] = 30;
+$config['ip_check'] = true;
+$config['enable_spellcheck'] = true;
+$config['force_https'] = true;
+$config['use_https'] = true;
+
+// Password change options
+$config['password_driver'] = 'dovecot';
+$config['password_dovecotpw'] = '/usr/bin/doveadm pw';
+$config['password_algorithm'] = 'CRYPT-SHA512';
+
+// Logging settings
+$config['log_driver'] = 'file';
+$config['log_dir'] = '/var/www/html/roundcube/logs/';
+$config['log_level'] = 4;
+
+// Enable plugins
+$config['plugins'] = array(
+    'archive',
+    'zipdownload',
+    'managesieve',
+    'password',
+); 

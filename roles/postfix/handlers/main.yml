@@ -1,0 +1,14 @@
+---
+# Postfix handlers
+
+- name: Restart postfix
+  become: yes
+  ansible.builtin.service:
+    name: postfix
+    state: restarted
+
+- name: Reload postfix
+  become: yes
+  ansible.builtin.service:
+    name: postfix
+    state: reloaded 

@@ -1,0 +1,22 @@
+---
+# Email Configuration
+email: 
+domain: 
+collector_name: admin
+
+# Security (store these securely in production using Ansible Vault)
+mail_password: password
+mariadb_password: P@ssw0rd
+roundcube_db_password: P@ssw0rd
+
+# System Configuration
+vmail_user_id: 5000
+vmail_group_id: 5000
+mail_location: "/var/mail/vhosts"
+
+# Software Versions
+roundcube_version: "1.6.8"
+
+# SSL Configuration
+ssl_cert_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+ssl_key_path: "/etc/letsencrypt/live/{{ domain }}/privkey.pem" 

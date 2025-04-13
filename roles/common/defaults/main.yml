@@ -1,0 +1,52 @@
+---
+# Default variables for common role
+
+# Base packages required for the system
+packages:
+  - apache2
+  - dovecot-core
+  - dovecot-imapd
+  - dovecot-lmtpd
+  - dovecot-pop3d
+  - libapache2-mod-php
+  - php
+  - php-common
+  - php-ctype
+  - php-curl
+  - php-dom
+  - php-gd
+  - php-imagick
+  - php-intl
+  - php-json
+  - php-ldap
+  - php-mbstring
+  - php-mysql
+  - php-sockets
+  - php-sqlite3
+  - php-xml
+  - php-zip
+  - postfix
+  - sqlite3
+
+# Firewall settings
+firewall_allowed_services:
+  - port: 22
+    proto: tcp
+  - port: 25
+    proto: tcp
+  - port: 80
+    proto: tcp
+  - port: 110
+    proto: tcp
+  - port: 143
+    proto: tcp
+  - port: 443
+    proto: tcp
+  - port: 465
+    proto: tcp
+  - port: 587
+    proto: tcp
+  - port: 993
+    proto: tcp
+  - port: 995
+    proto: tcp

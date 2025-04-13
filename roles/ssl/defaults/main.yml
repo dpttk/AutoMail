@@ -1,0 +1,11 @@
+---
+# SSL role default variables
+
+# SSL certificate paths
+ssl_cert_path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+ssl_key_path: "/etc/letsencrypt/live/{{ domain }}/privkey.pem"
+
+# SSL renewal cron job settings
+ssl_renewal_hour: "3"
+ssl_renewal_minute: "30"
+ssl_renewal_weekday: "1" 

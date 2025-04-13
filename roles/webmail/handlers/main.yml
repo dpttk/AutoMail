@@ -1,0 +1,8 @@
+---
+# Webmail handlers
+
+- name: Restart apache
+  become: yes
+  ansible.builtin.service:
+    name: apache2
+    state: restarted 

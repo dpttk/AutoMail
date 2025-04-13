@@ -1,0 +1,103 @@
+---
+# Dovecot role tasks
+
+- name: Create vmail group
+  become: yes
+  group:
+    name: vmail
+    gid: "{{ vmail_group_id | default(omit) }}"
+    state: present
+  tags:
+    - dovecot
+    - users
+
+- name: Create vmail user
+  become: yes
+  user:
+    name: vmail
+    system: yes
+    shell: /sbin/nologin
+    home: /var/mail/vhosts
+    group: vmail
+    create_home: no
+  tags:
+    - dovecot
+    - users
+
+- name: Configure mail location
+  become: yes
+  ansible.builtin.template:
+    src: 10-mail.conf.j2
+    dest: /etc/dovecot/conf.d/10-mail.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart dovecot
+  tags:
+    - dovecot
+    - configuration
+
+- name: Create virtual mail directory
+  become: yes
+  file:
+    path: /var/mail/vhosts
+    state: directory
+    owner: vmail
+    group: vmail
+    mode: '02755'
+  tags:
+    - dovecot
+    - directories
+
+- name: Assign ownership of mail directory
+  become: yes
+  file:
+    path: "{{ mail_location }}"
+    owner: vmail
+    group: vmail
+    state: directory
+    recurse: yes
+  tags:
+    - dovecot
+    - permissions
+
+- name: Configure dovecot
+  become: yes
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - src: 10-master.conf.j2
+      dest: /etc/dovecot/conf.d/10-master.conf
+    - src: 10-auth.conf.j2
+      dest: /etc/dovecot/conf.d/10-auth.conf
+    - src: auth-passwdfile.conf.ext.j2
+      dest: /etc/dovecot/conf.d/auth-passwdfile.conf.ext
+    - src: dovecot-users.j2
+      dest: /etc/dovecot/dovecot-users
+  notify: Restart dovecot
+  tags:
+    - dovecot
+    - configuration
+
+- name: Configure SSL settings
+  become: yes
+  ansible.builtin.replace:
+    path: /etc/dovecot/conf.d/10-ssl.conf
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - regexp: "ssl = yes"
+      replace: "ssl = required"
+    - regexp: "ssl_cert = </etc/dovecot/private/dovecot.pem"
+      replace: "ssl_cert = <{{ ssl_cert_path }}"
+    - regexp: "ssl_key = </etc/dovecot/private/dovecot.key"
+      replace: "ssl_key = <{{ ssl_key_path }}"
+  notify: Restart dovecot
+  tags:
+    - dovecot
+    - ssl
+    - security 

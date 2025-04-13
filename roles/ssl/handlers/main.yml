@@ -1,0 +1,9 @@
+---
+# SSL role handlers
+
+- name: Restart Apache
+  become: yes
+  service:
+    name: apache2
+    state: restarted
+  when: "'apache2' in ansible_facts.services" 

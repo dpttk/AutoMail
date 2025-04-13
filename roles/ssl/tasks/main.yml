@@ -1,0 +1,67 @@
+# SSL role tasks
+
+- name: Install snapd
+  become: yes
+  apt:
+    name: snapd
+    state: present
+  tags:
+    - packages
+    - snapd
+
+- name: Check if snapd service exists
+  become: yes
+  stat:
+    path: /lib/systemd/system/snapd.service
+  register: snapd_service
+  tags:
+    - packages
+    - snapd
+
+- name: Enable and start snapd service
+  become: yes
+  systemd:
+    name: snapd
+    state: started
+    enabled: yes
+  when: snapd_service.stat.exists
+  tags:
+    - packages
+    - snapd
+
+- name: Install certbot and Apache plugin
+  become: yes
+  apt:
+    name: 
+      - certbot
+      - python3-certbot-apache
+    state: present
+  tags:
+    - packages
+    - certbot
+
+- name: Get SSL certificate
+  become: yes
+  command: >
+    certbot certonly --apache 
+    --email {{ email }} 
+    --domain {{ domain }} 
+    --agree-tos 
+    --non-interactive
+  args:
+    creates: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+  tags:
+    - ssl
+    - certbot
+
+- name: Setup cronjob for SSL renewal
+  become: yes
+  cron:
+    name: "Renew SSL certificate"
+    job: "certbot renew --quiet"
+    hour: "3"
+    minute: "30"
+    weekday: "1"
+  tags:
+    - ssl
+    - certbot 

@@ -1,0 +1,36 @@
+---
+# AutoMail main playbook
+# This playbook sets up a complete mail server with Postfix, Dovecot, and Roundcube webmail
+
+- name: Configure mail servers
+  hosts: mailservers
+  become: yes
+  gather_facts: yes
+  
+  pre_tasks:
+    - name: Check if running as root or with sudo privileges
+      fail:
+        msg: "This playbook requires root privileges. Run with sudo or as root."
+      when: ansible_user_id != 'root' and not ansible_become
+      tags: always
+      
+  roles:
+    - role: ssl
+      tags: ssl
+    - role: common
+      tags: common
+      
+    - role: postfix
+      tags: postfix
+      
+    - role: dovecot
+      tags: dovecot
+      
+- name: Configure webmail interface
+  hosts: webmail
+  become: yes
+  gather_facts: yes
+  
+  roles:
+    - role: webmail
+      tags: webmail 

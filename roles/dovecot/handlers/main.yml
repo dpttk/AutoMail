@@ -1,0 +1,8 @@
+---
+# Dovecot handlers
+
+- name: Restart dovecot
+  become: yes
+  ansible.builtin.service:
+    name: dovecot
+    state: restarted 

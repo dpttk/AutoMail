@@ -1,0 +1,87 @@
+---
+# Postfix role tasks
+
+- name: Ensure Postfix is installed
+  become: yes
+  apt:
+    name: postfix
+    state: present
+  tags:
+    - packages
+    - postfix
+
+- name: Ensure Postfix configuration directory exists
+  become: yes
+  file:
+    path: /etc/postfix
+    state: directory
+    mode: '0755'
+  tags:
+    - directories
+    - postfix
+
+- name: Create default master.cf
+  become: yes
+  template:
+    src: master.cf.j2
+    dest: /etc/postfix/master.cf
+    mode: '0644'
+    force: yes
+  tags:
+    - configuration
+    - postfix
+
+- name: Create virtual_aliases file
+  become: yes
+  file:
+    path: /etc/postfix/virtual_aliases
+    state: touch
+    mode: '0644'
+  tags:
+    - configuration
+    - postfix
+
+- name: Add collector to postfix virtual aliases
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/postfix/virtual_aliases
+    state: present
+    create: true
+    line: '@{{ domain }}       {{ collector_name }}@{{ domain }}'
+    mode: '0644'
+  notify: Reload postfix
+  tags:
+    - configuration
+    - postfix+
+
+- name: Create postfix virtual DB hash+
+  become: yes
+  command: postmap /etc/postfix/virtual_aliases
+  args:
+    creates: /etc/postfix/virtual_aliases.db
+  notify: Reload postfix
+  tags:
+    - configuration
+    - postfix
+
+- name: Setup postfix main.cf
+  become: yes
+  ansible.builtin.template: 
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    mode: '0644'
+  notify: Restart postfix
+  tags:
+    - configuration
+    - postfix
+
+- name: Adjust postfix master.cf
+  become: yes
+  ansible.builtin.replace:
+    path: /etc/postfix/master.cf
+    regexp: "#submission inet n       -       y       -       -       smtpd" 
+    replace: "submission inet n       -       y       -       -       smtpd"
+  notify: Restart postfix
+  tags:
+    - configuration
+    - postfix

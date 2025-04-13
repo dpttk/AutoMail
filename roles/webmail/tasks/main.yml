@@ -1,0 +1,99 @@
+---
+# Webmail role tasks
+
+- name: Download Roundcube
+  get_url:
+    url: "https://github.com/roundcube/roundcubemail/releases/download/{{ roundcube_version }}/roundcubemail-{{ roundcube_version }}-complete.tar.gz"
+    dest: "/tmp/roundcubemail-{{ roundcube_version }}-complete.tar.gz"
+    mode: '0644'
+  tags:
+    - webmail
+    - download
+
+- name: Extract Roundcube
+  become: yes
+  unarchive:
+    src: "/tmp/roundcubemail-{{ roundcube_version }}-complete.tar.gz"
+    dest: /var/www/html/
+    remote_src: yes
+    extra_opts: [--transform, "s/roundcubemail-{{ roundcube_version }}/roundcube/"]
+  tags:
+    - webmail
+    - install
+
+- name: Set ownership of Roundcube directory
+  become: yes
+  file:
+    path: /var/www/html/roundcube
+    owner: www-data
+    group: www-data
+    state: directory
+    recurse: yes
+  tags:
+    - webmail
+    - permissions
+
+- name: Create Roundcube config
+  become: yes
+  template:
+    src: config.inc.php.j2
+    dest: /var/www/html/roundcube/config/config.inc.php
+    owner: www-data
+    group: www-data
+    mode: '0640'
+  tags:
+    - webmail
+    - configuration
+
+- name: Set correct file permissions
+  become: yes
+  file:
+    path: "/var/www/html/roundcube/{{ item }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+    mode: "{{ '0770' if item == 'temp' or item == 'logs' else '0750' }}"
+  loop:
+    - temp
+    - logs
+  tags:
+    - webmail
+    - security
+    - permissions
+
+- name: Enable Apache modules for SSL
+  become: yes
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - ssl
+    - rewrite
+  register: apache_modules
+  tags:
+    - webmail
+    - apache
+    - ssl
+
+- name: Configure Apache for Roundcube
+  become: yes
+  ansible.builtin.template:
+    src: roundcube.conf.j2
+    dest: /etc/apache2/sites-available/roundcube.conf
+    mode: '0644'
+  tags:
+    - webmail
+    - apache
+    - configuration
+
+- name: Enable Roundcube site
+  become: yes
+  command: a2ensite roundcube.conf
+  args:
+    creates: /etc/apache2/sites-enabled/roundcube.conf
+  notify: Restart apache
+  when: apache_modules is changed
+  tags:
+    - webmail
+    - apache
+    - configuration
