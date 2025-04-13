@@ -1,87 +1,11 @@
-##
-## Mailbox locations and namespaces
-##
-
-# Location for users' mailboxes. The default is empty, which means that Dovecot
-# tries to find the mailboxes automatically. This won't work if the user doesn't
-# yet have any mail, so you should explicitly tell Dovecot the full path.
-#
-# If you're using a single domain, you can use something like:
-#mail_location = maildir:/var/mail/vhosts/%d/%n
-# If you're using multiple domains, you can use something like:
 mail_location = maildir:/var/mail/vhosts/%d/%n
 
-# If you need a namespace for a specific domain, you can use:
-#namespace inbox {
-#  separator = /
-#  inbox = yes
-#  location = maildir:/var/mail/vhosts/%d/%n
-#}
-
-# If you need to support multiple domains, you can use:
 namespace inbox {
-  separator = /
   inbox = yes
   location = maildir:/var/mail/vhosts/%d/%n
 }
 
-# Disable the default inbox namespace
-namespace inbox {
-  separator = /
-  inbox = no
-  location = 
+mail_privileged_group = mail
+
+protocol !indexer-worker {
 }
-
-# Mailbox folders to create
-mailbox_list_index = yes
-mailbox_list_index_very_dirty_syncs = yes
-mailbox_list_index_include_inbox = no
-
-# Mailbox settings
-mailbox_idle_check_interval = 30s
-# mailbox_idle_check_min_interval = 10s
-mailbox_max_index_locks = 5
-
-# Maildir settings
-maildir_copy_with_hardlinks = yes
-maildir_very_dirty_syncs = yes
-maildir_broken_filename_encoding = yes
-
-# Trash folder
-mailbox Trash {
-  auto = subscribe
-  special_use = \Trash
-}
-
-# Sent folder
-mailbox Sent {
-  auto = subscribe
-  special_use = \Sent
-}
-
-# Drafts folder
-mailbox Drafts {
-  auto = subscribe
-  special_use = \Drafts
-}
-
-# Junk folder
-mailbox Junk {
-  auto = subscribe
-  special_use = \Junk
-}
-
-# Archive folder
-mailbox Archive {
-  auto = subscribe
-  special_use = \Archive
-}
-
-# Quota settings
-quota = maildir:User quota
-quota_rule = *:storage=1G
-quota_rule2 = Trash:storage=+100M
-quota_rule3 = Junk:storage=+100M
-quota_warning = storage=95%% quota-warning 95 %u
-quota_warning2 = storage=80%% quota-warning 80 %u
-quota_warning3 = storage=70%% quota-warning 70 %u 

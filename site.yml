@@ -15,10 +15,11 @@
       tags: always
       
   roles:
-    - role: ssl
-      tags: ssl
     - role: common
       tags: common
+
+    - role: ssl
+      tags: ssl
       
     - role: postfix
       tags: postfix

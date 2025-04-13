@@ -2,12 +2,12 @@
 # Email Configuration
 email: 
 domain: 
-collector_name: admin
+collector_name: 
 
 # Security (store these securely in production using Ansible Vault)
-mail_password: password
-mariadb_password: P@ssw0rd
-roundcube_db_password: P@ssw0rd
+mail_password: 
+mariadb_password: 
+roundcube_db_password: 
 
 # System Configuration
 vmail_user_id: 5000
