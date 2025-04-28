@@ -1,0 +1,5 @@
+---
+# Security (encrypted with Ansible Vault)
+mail_password: password
+mariadb_password: P@ssw0rd
+roundcube_db_password: P@ssw0rd 

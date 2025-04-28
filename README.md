@@ -44,17 +44,19 @@ I would suggest connecting your mail server to your current email service provid
 
 2. Update the inventory file with your server information:
    ```
-   vim inventory/hosts.ini
+   nano inventory/hosts.ini
    ```
 
 3. Configure variables for your environment:
    ```
-   vim group_vars/all.yaml
+   nano group_vars/all.yaml
+   nano group_vars/vault.yaml
+   ansible-vault encrypt group_vars/vault.yaml
    ```
 
 4. Run the playbook:
    ```
-   ansible-playbook -i inventory/hosts.ini site.yaml
+   ansible-playbook -i inventory/hosts.ini site.yaml --ask-vault-pass
    ```
 
 ## Configuration
